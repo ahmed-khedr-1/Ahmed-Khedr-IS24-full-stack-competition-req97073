@@ -1,0 +1,6 @@
+{
+  "name": "is24-api",
+  "version": "1.0.0",
+  "description": "api for is24 competition",
+  "type": "module"
+}
