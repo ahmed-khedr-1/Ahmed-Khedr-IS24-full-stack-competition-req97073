@@ -5,20 +5,23 @@
 npm install
 ```
 
-### Compiles and hot-reloads for development
+## Start Server/API run command
+```
+npm run start-server
+```
+
+## Start client side run command
 ```
 npm run serve
 ```
 
-### Compiles and minifies for production
+### Tech stack used
 ```
-npm run build
-```
-
-### Lints and fixes files
-```
-npm run lint
+Server/API: Nodejs, Express and Swagger
 ```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+```
+Client side: Vuejs, Typescript and Tailwind
+```
+
+
