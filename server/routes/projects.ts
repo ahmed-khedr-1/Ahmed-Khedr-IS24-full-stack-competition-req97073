@@ -38,6 +38,8 @@ const projects: Project[] = readJSONFile(dataFileLocation);
  *         startDate:
  *           type: string
  *           format: date
+ *           pattern: "YYYY/MM/DD"
+ *           example: "2023/01/01"
  *           description: The start date of the project
  *         methodology:
  *           type: string
@@ -101,6 +103,13 @@ router.post("/", (req: Request, res: Response) => {
       .json({ message: "All required fields must be defined." });
   }
 
+  if(!validDateFormat(project.startDate))
+  {
+    return res
+      .status(400)
+      .json({ message: "Invalid startDate Field" });
+  }
+
   // Generate a unique ID for the new project
   project.productId = uuid();
   projects.push(project);
@@ -158,7 +167,12 @@ router.put("/:productId", (req: Request, res: Response) => {
       .json({ message: "All required fields must be defined." });
   }
 
-  updatedProject.startDate = updatedProject.startDate.replace(/-/g, "/")
+  if(!validDateFormat(updatedProject.startDate))
+  {
+    return res
+      .status(400)
+      .json({ message: "Invalid startDate Field" });
+  }
 
   // Find the project with the given ID and update its fields
   for (let i = 0; i < projects.length; i++) {
@@ -190,6 +204,16 @@ function validProject(project: Project): boolean {
   )
     return false;
   return true;
+}
+
+//helper function to validate date format
+function validDateFormat(date: string): boolean {
+  const dateFormatRegex = /^\d{4}\/\d{2}\/\d{2}$/;
+  if (dateFormatRegex.test(date)) {
+    return true
+  } 
+  
+  return false
 }
 
 export default router;

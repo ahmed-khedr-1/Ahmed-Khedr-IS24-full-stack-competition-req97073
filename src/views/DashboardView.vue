@@ -6,35 +6,38 @@
     <BaseModal :modalActive="isModalActive" @close-modal="toggleModal" :header="modalHeaderTxt"
       :closeText="modalCloseTxt">
       <form @submit.prevent="validateForm">
-        <div class="form-group">
-          <InputText type="text" v-model="selectedRow.productName" placeholder="Project Name" required />
+        <div class="error-section text-red-500 font-bold" v-if="isFormError">
+          {{ formErrorMsg }}
         </div>
-        <div class="form-group">
-          <InputText type="text" v-model="selectedRow.scrumMasterName" placeholder="Scrum Master" required />
+        <div class="form-group py-2">
+          <InputText class="w-full" type="text" v-model="selectedRow.productName" placeholder="Project Name" required />
         </div>
-        <div class="form-group">
-          <InputText type="text" v-model="selectedRow.productOwnerName" placeholder="Product Owner" required />
+        <div class="form-group py-2">
+          <InputText class="w-full" type="text" v-model="selectedRow.scrumMasterName" placeholder="Scrum Master" required />
         </div>
-        <div class="form-group ">
-          <div v-for="(developer, index) in selectedRow.developers" :key="index">
-            <InputText type="text" v-model="selectedRow.developers[index]" class="developer-fld" placeholder="Developer"
+        <div class="form-group py-2">
+          <InputText class="w-full" type="text" v-model="selectedRow.productOwnerName" placeholder="Product Owner" required />
+        </div>
+        <div class="form-group w-full">
+          <div class="flex my-2 w-full" v-for="(developer, index) in selectedRow.developers" :key="index">
+            <InputText type="text" v-model="selectedRow.developers[index]" class="developer-fld w-full mr-2"  placeholder="Developer"
               required />
             <Button v-if="index > 0" @click="deleteDeveloperFld(index)" icon="pi pi-times" severity="danger" />
           </div>
 
-          <Button @click="addDeveloperFld" label="Add Developer" severity="secondary" />
+          <Button @click="addDeveloperFld" label="Add Developer" class="mb-2 float-right" severity="info" />
 
         </div>
-        <div class="form-group">
+        <div class="form-group py-2">
           <Dropdown v-model="selectedRow.methodology" :options="methodologies" placeholder="Methodology"
             class="w-full md:w-14rem" required />
         </div>
-        <div class="form-group">
-          <InputText type="date" v-model="selectedRow.startDate" placeholder="Start Date (YYYY-MM-DD)" required />
+        <div class="form-group py-2">
+          <InputText class="w-full" type="date" v-model="selectedRow.startDate" placeholder="Start Date (YYYY-MM-DD)" required />
         </div>
         <div class="form-group">
-          <Button v-if="action == Action.create" label="Save" type="submit" severity="secondary" />
-          <Button v-if="action == Action.update" label="Update" type="submit" severity="secondary" />
+          <Button v-if="action == Action.create" class="float-right" label="Save" type="submit" severity="info" />
+          <Button v-if="action == Action.update" class="float-right" label="Update" type="submit" severity="info" />
         </div>
       </form>
 
@@ -62,42 +65,36 @@ import { loadProjectsURL, updateProjectURL, addProjectURL, maxDevelopersPerProje
 const columns = ref()
 columns.value = [
 
-  { data: 'productName', title: "Product Name", },
-  { data: 'productOwnerName', title: "Product Owner" },
+  { data: 'productName', title: "Product Name", searchable:false },
+  { data: 'productOwnerName', title: "Product Owner", searchable:false },
   { data: 'scrumMasterName', title: "Scrum Master" },
   { data: 'developers[, ]', title: "Developer Names" },
-  { data: 'startDate', title: "Start Date" },
-  { data: 'methodology', title: "Methodology" },
-  //   {
-  //     data: null,
-  //     className: "dt-center editor-delete",
-  //     defaultContent: `<div class="edit-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-  //   <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-  // </svg>
-  // </div>`,
-  //     orderable: false,
-  //     title:"Edit"
-  //   },
+  { data: 'startDate', title: "Start Date", searchable:false },
+  { data: 'methodology', title: "Methodology", searchable:false },
 ]
 
-
+//Define referenced variables to refelct changes on DOM
 const dataURL = ref(loadProjectsURL)
 const methodologies = ref(['Agile', 'Waterfall'])
 const isModalActive = ref(false)
+const isFormError = ref(false)
 const modalHeaderTxt = ref('')
 const modalCloseTxt = ref('Close')
+const formErrorMsg = ref('')
 const selectedRow = ref<Project>()
 const action = ref<Action>()
 const dashboardTable = ref()
 const addRowLabel = "Add Project"
 const updateRowLabel = "Update Selected Project"
 
+
+// show/hide modal flag
 const toggleModal = () => {
   isModalActive.value = !isModalActive.value
 }
 
+//Handles add project request and displays new project form
 const addRow = () => {
-  console.log("add row called")
 
   modalHeaderTxt.value = "Add Project"
   selectedRow.value = initNewProjectObj()
@@ -105,8 +102,8 @@ const addRow = () => {
   action.value = Action.create
 }
 
+//Handles update project request and displays update project form
 const updateRow = (rowData) => {
-  console.log("update row called")
 
   selectedRow.value = rowData
 
@@ -121,9 +118,17 @@ const updateRow = (rowData) => {
   action.value = Action.update
 }
 
+//Handle form validation on submission
 const validateForm = () => {
 
   //all validation is handled by dom, so calling method based on action
+
+  //updating date format
+  if(selectedRow.value)
+    selectedRow.value.startDate = selectedRow.value.startDate.replace(/-/g, "/")
+
+  //Display modal form based on action requested
+  //Note: Check action enum class for all values
   switch (action.value) {
     case Action.create:
       addNewProject()
@@ -138,8 +143,10 @@ const validateForm = () => {
 
 }
 
+//Handles create new project request to the server
 const addNewProject = async () => {
   try {
+    isFormError.value = false
     //api request to create new entry
     const response = await fetch(addProjectURL, {
       method: 'POST',
@@ -150,13 +157,19 @@ const addNewProject = async () => {
     })
 
     if (!response.ok) {
+      const errorMsg = await response.json()
+
+      if(errorMsg?.message)
+        throw(errorMsg.message)
+
       throw ("Failed to add project")
     }
-
+    
     const addedProject = await response.json()
-
+    
     //update generated id
-    selectedRow.value!.productId = addedProject.productId
+    if(selectedRow.value)
+      selectedRow.value.productId = addedProject.productId
 
     //update table
     dashboardTable.value.addNewRow(selectedRow.value)
@@ -164,14 +177,17 @@ const addNewProject = async () => {
     //close modal
     toggleModal()
   } catch (err) {
-    alert(err)
+    isFormError.value = true
+    formErrorMsg.value = String(err)
   }
 
 }
 
+//Handles update project request sent to the server
 const updateProject = async () => {
 
   try{
+    isFormError.value = false
     //api request to update entry
     const response = await fetch(updateProjectURL +`/${selectedRow.value?.productId}`, {
       method: 'PUT',
@@ -182,6 +198,11 @@ const updateProject = async () => {
     })
   
     if (!response.ok) {
+      const errorMsg = await response.json()
+
+      if(errorMsg?.message)
+        throw(errorMsg.message)
+        
       throw ("Failed to update project")
     }
     
@@ -192,7 +213,8 @@ const updateProject = async () => {
     toggleModal()
 
   } catch (err) {
-    alert(err)
+    isFormError.value = true
+    formErrorMsg.value = String(err)
   }
 
 }
@@ -216,7 +238,7 @@ const addDeveloperFld = () => {
     selectedRow.value.developers.push("")
 }
 
-//removes developer fld from form
+//remove developer fld from form
 const deleteDeveloperFld = (index: number) => {
   if (selectedRow.value)
     selectedRow.value.developers.splice(index, 1)
